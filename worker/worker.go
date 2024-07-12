@@ -32,13 +32,37 @@ func main() {
 	go func() {
 		for {
 			select {
+
 			case err := <-consumer.Error():
 				fmt.Println(err)
 
 			case msg := <-consumer.Messages():
 				msgCount++
 				fmt.Printf("Received message Count: %d: | Topic (%s) | Message (%s)\n", msgCount, string(msg.Topic), string(msg.Value))
+
+			case <-sigchan:
+				fmt.Println("Interruption detected")
+				doneCh <- struct{}
 			}
 		}
 	}()
+
+	<-doneCh
+	fmt.Println("Processed", msgCount, "messages")
+	if err := worker.Close(); err != nil {
+		panic(err)
+	}
+}
+
+func connectConsumer(brokersUrl []string) (sarama.Consumer, error) {
+	config := sarama.NewConfig()
+	config.Consumer.Return.Errors = true
+
+	conn, err := sarama.NewConsumer(brokersUrl, config)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
 }

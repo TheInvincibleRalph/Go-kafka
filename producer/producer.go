@@ -40,7 +40,8 @@ func PushCommentToQueue(topic string, message []byte) error {
 		return err
 	}
 	defer producer.Close()
-	msg := &sarama.ProducerMessage{
+
+	msg := &sarama.ProducerMessage{ //Creates a new Kafka message with the specified topic and value.
 		Topic: topic,
 		Value: sarama.StringEncoder(message),
 	}

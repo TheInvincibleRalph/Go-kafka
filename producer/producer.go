@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/IBM/sarama"
 	"github.com/gofiber/fiber"
 )
 
@@ -16,6 +17,28 @@ func main() {
 	api := app.Group("/api/vi")         //This creates a new route group with the prefix /api/vi. This is useful for versioning the API.
 	ap.Post("/comments", createComment) //This line registers a new POST route "/comments" within the /api/vi group. It specifies that the createComment function should handle requests to this route.
 	app.Listen(":3000")
+}
+
+func ConnectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = 5
+
+	conn, err := sarama.NewSyncProducer(brokersUrl, config)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+func PushCommentToQueue(topic string, message []byte) error {
+	brokersUrl := []string{"localhost:29092"}
+	producer, err := ConnectProducer(brokersUrl)
+	if err != nil {
+		return err
+	}
+	defer producer.Close()
 }
 
 func createComment(c *fiber.Ctx) error {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/IBM/sarama"
@@ -21,9 +22,9 @@ func main() {
 
 func ConnectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
 	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Retry.Max = 5
+	config.Producer.Return.Successes = true          // Configures the producer to wait for acknowledgments from Kafka brokers.
+	config.Producer.RequiredAcks = sarama.WaitForAll //Ensures that the producer waits for all in-sync replicas to acknowledge the message before considering it successfully sent.
+	config.Producer.Retry.Max = 5                    //Sets the maximum number of retries for sending a message.
 
 	conn, err := sarama.NewSyncProducer(brokersUrl, config)
 	if err != nil {
@@ -39,6 +40,16 @@ func PushCommentToQueue(topic string, message []byte) error {
 		return err
 	}
 	defer producer.Close()
+	msg := &sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.StringEncoder(message),
+	}
+	partition, offset, err := producer.SendMessage(msg)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Message is stored in topic(%s)/partition(&d)/offset(%d)\n", topic, partition, offset)
+	return nil
 }
 
 func createComment(c *fiber.Ctx) error {

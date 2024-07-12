@@ -20,6 +20,7 @@ func main() {
 
 func createComment(c *fiber.Ctx) error {
 	cmt := new(Comment)
+	//error handling
 	if err := c.BodyParser(cmt); err != nil { //BodyParser is a works just like json.NewDecoder in net/http or mux framework
 		log.Println(err)
 		c.Status(400).JSON(&fiber.Map{ //fiber.Map is a type alias for map[string]interface{} provided by the Fiber framework. It is used to create a generic map with string keys and values of any type. This map can then be easily serialized into JSON using Fiber’s c.JSON method.
@@ -31,13 +32,13 @@ func createComment(c *fiber.Ctx) error {
 	cmtInBytes, err := json.Marshal(cmt)
 	PushCommentToQueue("comments", cmtInBytes)
 
-	//error handling
 	err = c.JSON(&fiber.Map{
 		"success": true,
 		"message": "Comment pushed successfully",
 		"comment": cmt,
 	})
 
+	//error handling
 	if err != nil {
 		c.Status(500).JSON(&fiber.Map{
 			"success": false,

@@ -171,7 +171,7 @@ msg := &sarama.ProducerMessage{
 
 ### Example in the Context of Your Code
 
-In your provided code, the Kafka message is created and sent as follows:
+Take this code, where the Kafka message is created and sent, for example:
 
 ```go
 msg := &sarama.ProducerMessage{

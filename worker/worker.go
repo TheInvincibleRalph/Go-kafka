@@ -24,7 +24,7 @@ func connectConsumer(brokersUrl []string) (sarama.Consumer, error) {
 
 func main() {
 	topic := "comments"                                         //defines the Kafka topic to which the consumer will subscribe.
-	worker, err := connectConsumer([]string("localhost:29092")) //calls connectConsumer with the Kafka broker URL to create a Kafka consumer
+	worker, err := connectConsumer([]string{"localhost:29092"}) //calls connectConsumer with the Kafka broker URL to create a Kafka consumer
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 		for {
 			select {
 
-			case err := <-consumer.Error():
+			case err := <-consumer.Errors():
 				fmt.Println(err)
 
 			case msg := <-consumer.Messages():

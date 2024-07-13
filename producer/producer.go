@@ -30,7 +30,10 @@ func ConnectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
 // ======================================== CREATES COMMENT ========================================
 
 func createComment(c *fiber.Ctx) error {
+
+	// Instantiate new Message struct
 	cmt := new(Comment)
+
 	//error handling
 	if err := c.BodyParser(cmt); err != nil { //BodyParser is a works just like json.NewDecoder in net/http or mux framework
 		log.Println(err)
@@ -57,13 +60,14 @@ func createComment(c *fiber.Ctx) error {
 		})
 		return err
 	}
+	return err
 }
 
 // ======================================== SENDS A MESSAGE TO A PARTICULAR KAFKA TOPIC ========================================
 
 func PushCommentToQueue(topic string, message []byte) error {
 	brokersUrl := []string{"localhost:29092"}
-	producer, err := ConnectProducer(brokersUrl)
+	producer, err := ConnectProducer(brokersUrl) //this line calls the ConnectProducer function, passing the broker URL slice.
 	if err != nil {
 		return err
 	}
@@ -83,7 +87,7 @@ func PushCommentToQueue(topic string, message []byte) error {
 
 func main() {
 	app := fiber.New()
-	api := app.Group("/api/vi")         //This creates a new route group with the prefix /api/vi. This is useful for versioning the API.
-	ap.Post("/comments", createComment) //This line registers a new POST route "/comments" within the /api/vi group. It specifies that the createComment function should handle requests to this route.
+	api := app.Group("/api/vi")          //This creates a new route group with the prefix /api/vi. This is useful for versioning the API.
+	api.Post("/comments", createComment) //This line registers a new POST route "/comments" within the /api/vi group. It specifies that the createComment function should handle requests to this route.
 	app.Listen(":3000")
 }

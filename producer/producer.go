@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/IBM/sarama"
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
 type Comment struct {
@@ -46,13 +46,12 @@ func createComment(c *fiber.Ctx) error {
 	cmtInBytes, err := json.Marshal(cmt)
 	PushCommentToQueue("comments", cmtInBytes)
 
+	// Return Comment in JSON format
 	err = c.JSON(&fiber.Map{
 		"success": true,
 		"message": "Comment pushed successfully",
 		"comment": cmt,
 	})
-
-	//error handling
 	if err != nil {
 		c.Status(500).JSON(&fiber.Map{
 			"success": false,
@@ -60,6 +59,7 @@ func createComment(c *fiber.Ctx) error {
 		})
 		return err
 	}
+
 	return err
 }
 

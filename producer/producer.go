@@ -13,13 +13,7 @@ type Comment struct {
 	Text string `form:"text" json:"text"`
 }
 
-func main() {
-	app := fiber.New()
-	api := app.Group("/api/vi")         //This creates a new route group with the prefix /api/vi. This is useful for versioning the API.
-	ap.Post("/comments", createComment) //This line registers a new POST route "/comments" within the /api/vi group. It specifies that the createComment function should handle requests to this route.
-	app.Listen(":3000")
-}
-
+// ======================================== CONNECTS THE PRODUCER TO KAFKA BROKERS ========================================
 func ConnectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true          // Configures the producer to wait for acknowledgments from Kafka brokers.
@@ -33,25 +27,7 @@ func ConnectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
 	return conn, nil
 }
 
-func PushCommentToQueue(topic string, message []byte) error {
-	brokersUrl := []string{"localhost:29092"}
-	producer, err := ConnectProducer(brokersUrl)
-	if err != nil {
-		return err
-	}
-	defer producer.Close()
-
-	msg := &sarama.ProducerMessage{ //Creates a new Kafka message with the specified topic and value.
-		Topic: topic,
-		Value: sarama.StringEncoder(message),
-	}
-	partition, offset, err := producer.SendMessage(msg)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Message is stored in topic(%s)/partition(&d)/offset(%d)\n", topic, partition, offset)
-	return nil
-}
+// ======================================== CREATES COMMENT ========================================
 
 func createComment(c *fiber.Ctx) error {
 	cmt := new(Comment)
@@ -81,4 +57,33 @@ func createComment(c *fiber.Ctx) error {
 		})
 		return err
 	}
+}
+
+// ======================================== SENDS A MESSAGE TO A PARTICULAR KAFKA TOPIC ========================================
+
+func PushCommentToQueue(topic string, message []byte) error {
+	brokersUrl := []string{"localhost:29092"}
+	producer, err := ConnectProducer(brokersUrl)
+	if err != nil {
+		return err
+	}
+	defer producer.Close()
+
+	msg := &sarama.ProducerMessage{ //Creates a new Kafka message with the specified topic and value.
+		Topic: topic,
+		Value: sarama.StringEncoder(message),
+	}
+	partition, offset, err := producer.SendMessage(msg)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Message is stored in topic(%s)/partition(&d)/offset(%d)\n", topic, partition, offset)
+	return nil
+}
+
+func main() {
+	app := fiber.New()
+	api := app.Group("/api/vi")         //This creates a new route group with the prefix /api/vi. This is useful for versioning the API.
+	ap.Post("/comments", createComment) //This line registers a new POST route "/comments" within the /api/vi group. It specifies that the createComment function should handle requests to this route.
+	app.Listen(":3000")
 }

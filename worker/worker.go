@@ -9,6 +9,19 @@ import (
 	"github.com/IBM/sarama"
 )
 
+func connectConsumer(brokersUrl []string) (sarama.Consumer, error) {
+	config := sarama.NewConfig()
+	config.Consumer.Return.Errors = true
+
+	conn, err := sarama.NewConsumer(brokersUrl, config)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
+}
+
 func main() {
 	topic := "comments"                                         //defines the Kafka topic to which the consumer will subscribe.
 	worker, err := connectConsumer([]string("localhost:29092")) //calls connectConsumer with the Kafka broker URL to create a Kafka consumer
@@ -27,7 +40,7 @@ func main() {
 
 	msgCount := 0 //initializes a counter to keep track of the number of messages processed.
 
-	doneCh := make(chan struct{})
+	doneCh := make(chan struct{}) //creates a channel of type struct{} for signal processing.
 
 	go func() {
 		for {
@@ -42,7 +55,7 @@ func main() {
 
 			case <-sigchan:
 				fmt.Println("Interruption detected")
-				doneCh <- struct{}{}
+				doneCh <- struct{}{} //passes an instance of the struct{} type
 			}
 		}
 	}()
@@ -52,17 +65,4 @@ func main() {
 	if err := worker.Close(); err != nil {
 		panic(err)
 	}
-}
-
-func connectConsumer(brokersUrl []string) (sarama.Consumer, error) {
-	config := sarama.NewConfig()
-	config.Consumer.Return.Errors = true
-
-	conn, err := sarama.NewConsumer(brokersUrl, config)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, nil
 }

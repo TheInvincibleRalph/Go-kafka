@@ -22,10 +22,10 @@ func main() {
 	}
 
 	fmt.Println("consumer started")
-	sigchan := make(chan os.Signal, 1) //creates a channel to receive OS signals.
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	sigchan := make(chan os.Signal, 1)                      //creates a channel to receive OS signals.
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM) //registers the channel to receive interrupt signals (like Ctrl+C).
 
-	msgCount := 0
+	msgCount := 0 //initializes a counter to keep track of the number of messages processed.
 
 	doneCh := make(chan struct{})
 
@@ -42,7 +42,7 @@ func main() {
 
 			case <-sigchan:
 				fmt.Println("Interruption detected")
-				doneCh <- struct{}
+				doneCh <- struct{}{}
 			}
 		}
 	}()
